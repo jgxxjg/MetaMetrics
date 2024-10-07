@@ -20,22 +20,22 @@ import re
 #### Dictionary of meta-discourse markers
 
 PersonMarkers = ["i", "we", "me", "mine", "our", "my", "us", "we", 
-   "you", "your", "yours", "your's", "ones", "one's", "their"];
+   "you", "your", "yours", "your's", "ones", "one's", "their"]
 AnnounceGoals = ["purpose", "aim", "intend", "seek", "wish", "argue", 
    "propose", "suggest", "discuss", "like", "focus", "emphasize", 
-   "goal", "this", "do", "will"];# contains two instances of "this"
+   "goal", "this", "do", "will"]# contains two instances of "this"
 CodeGloss = ["example", "instance", "e.g", "e.g.", "i.e", "i.e.", 
    "namely", "other", "means", "specifically", "known", "such", 
-   "define", "call"];
+   "define", "call"]
 AttitudeMarkers = ["admittedly", "agree", "amazingly", "correctly", 
    "curiously", "disappointing", "disagree", "even", "fortunate", 
    "hope", "hopeful", "hopefully", "important", "interest", "prefer", 
    "must", "ought", "remarkable", "surprise", "surprisingly", 
    "unfortunate", "unfortunately", "unusual", "unusually", 
-   "understandably"];
+   "understandably"]
 Endophorics = ["see", "note", "noted", "above", "below", "section", 
    "chapter", "discuss", "e.g.", "e.g", "example", "chapter", 
-   "figure", "fig", "plot", "chart"];
+   "figure", "fig", "plot", "chart"]
 Hedges = ["almost", "apparent", "apparently", "assume", "assumed", 
    "believe", "believed", "certain", "extent", "level", "amount", 
    "could", "couldnt", "couldn't", "doubt", "essentially", "estimate",
@@ -44,21 +44,21 @@ Hedges = ["almost", "apparent", "apparently", "assume", "assumed",
    "often", "perhaps", "possible", "probable", "probably", "relative",
     "seem", "seems", "sometime", "sometimes", "somewhat", "suggest", 
    "suspect", "unlikely", "uncertain", "unclear", "usual", "usually", 
-   "would", "wouldnt", "wouldn't", "little", "bit"];
+   "would", "wouldnt", "wouldn't", "little", "bit"]
 Emphatics = ["actually", "always", "certainly", "certainty", "clear", 
    "clearly", "conclusively", "decidedly", "demonstrate", 
    "determine", "doubtless", "essential", "establish", "indeed", 
    "know", "must", "never", "obvious", "obviously", "prove", "show", 
-   "sure", "true", "absolutely", "undoubtedly", "very"];
+   "sure", "true", "absolutely", "undoubtedly", "very"]
 FrameMarkersStages = ["start", "first", "firstly", "second", 
    "secondly", "third", "thirdly", "fourth", "fourthly", "fifth", 
    "fifthly", "next", "last", "begin", "lastly", "finally", 
-   "subsequently", "one", "two", "three", "four", "five"];
-Evidentials = ["according", "cite", "cites", "quote", "establish", 
-   "established", "said", "say", "says", "argue", "argues", "claim", 
-   "claims", "believe", "believes", "suggest", "suggests", "show", 
+   "subsequently", "one", "two", "three", "four", "five"]
+Evidentials = ["according", "cite", "cites", "quote", "establish",
+   "established", "said", "say", "says", "argue", "argues", "claim",
+   "claims", "believe", "believes", "suggest", "suggests", "show",
    "shows", "prove", "proves", "demonstrate", "demonstrates", 
-   "literature", "study", "studys", "research"];
+   "literature", "study", "studys", "research"]
 
 ####
 
@@ -77,13 +77,40 @@ st.sidebar.markdown("\n")
 
 #models = ["en_core_web_sm", "en_core_web_md"]
 
+def marker_count(markerlist=[]):
+    """
+    :param markerlist: a list of discourse markers
+    :return: unique markers with their number of occurrences.
+    """
+    markers = []
+    marker_types = set(markerlist)
+    for marker_type in marker_types:
+        markers.append(':'.join([marker_type, str(markerlist.count(marker_type))]))
+    return '; '.join(markers)
+
+def marker_count_data_frame(markerlist=[]):
+    """
+    :param markerlist: a list of discourse markers
+    :return: unique markers with their number of occurrences in dataframe
+    """
+    numbers = []
+    marker_types = list(set(markerlist))
+    for marker_type in marker_types:
+        numbers.append(markerlist.count(marker_type))
+    data = {
+        "Markers": marker_types,
+        "Frequency": numbers
+    }
+
+    return pd.DataFrame(data)
+
 
 selection=st.sidebar.radio(label=' ',options=['Meta-discourse count', 'Named entity recognition', 'AI integration'])
 
 
 if selection == "Meta-discourse count":
     st.markdown("## Meta-discourse count")
-    st.markdown("This page defines and uses a limited dictionary of metadiscursive markers.  Details of the dictionary may be found in our ASEE Paper... *link goes here.* Barring any logical errors in this code, theaccuracy of the output is validated as per the details described in our paper.")
+    st.markdown("This page defines and uses a limited dictionary of metadiscursive markers.  Details of the dictionary may be found in our ASEE Paper... *link goes here.* Barring any logical errors in this code, the accuracy of the output is validated as per the details described in our paper.")
     st.markdown("----")
     st.write("#### Enter the text you wish to count metadiscursive markers into this textbox.")
     txt = st.text_area('', """  """)
@@ -94,34 +121,97 @@ if selection == "Meta-discourse count":
     nWords = len(txt.split())
     st.write("Word count: ", nWords)    
     
-    n_person_markers = len([i for i in words if i in PersonMarkers])
+    person_markers = [i for i in words if i in PersonMarkers]
+    n_person_markers = len(person_markers)
     st.write("Number of Person Markers: ", n_person_markers, "Percentage: ", np.round(float(n_person_markers/(nWords+epsilon))*100,3))
-    
-    
-    n_announce_goals = len([i for i in words if i in AnnounceGoals])
+    st.write("Person Markers: ", marker_count(person_markers))
+    # st.table(marker_count_data_frame(person_markers))
+    st.dataframe(marker_count_data_frame(person_markers),
+                 column_config={
+                     "Markers": st.column_config.Column(width='medium')
+                 }
+                 )
+
+    announce_goals = [i for i in words if i in AnnounceGoals]
+    n_announce_goals = len(announce_goals)
     st.write("Number of 'Goal announcements': ", n_announce_goals, "Percentage: ", np.round(float(n_announce_goals/(nWords+epsilon))*100,3))
+    st.write("Goal announcements: ", marker_count(announce_goals))
+    st.dataframe(marker_count_data_frame(announce_goals),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-    n_code_gloss = len([i for i in words if i in CodeGloss])
+    code_gloss = [i for i in words if i in CodeGloss]
+    n_code_gloss = len(code_gloss)
     st.write("Number of 'Code Gloss': ", n_code_gloss, "Percentage: ", np.round(float(n_code_gloss/(nWords+epsilon))*100,3))
+    st.write("Code Gloss: ", marker_count(code_gloss))
+    st.dataframe(marker_count_data_frame(code_gloss),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-    n_att_markers = len([i for i in words if i in AttitudeMarkers])
+    att_markers = [i for i in words if i in AttitudeMarkers]
+    n_att_markers = len(att_markers)
     st.write("Number of 'Attitude Markers': ", n_att_markers, "Percentage: ", np.round(float(n_att_markers/(nWords+epsilon))*100,3))
+    st.write("Attitude Markers: ", marker_count(att_markers))
+    st.dataframe(marker_count_data_frame(att_markers),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-    n_endophorics = len([i for i in words if i in Endophorics])
+    endophorics = [i for i in words if i in Endophorics]
+    n_endophorics = len(endophorics)
     st.write("Number of 'Endophorics': ", n_endophorics, "Percentage: ", np.round(float(n_endophorics/(nWords+epsilon))*100,3))
+    st.write("Endophorics: ", marker_count(endophorics))
+    st.dataframe(marker_count_data_frame(endophorics),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-
-    n_hedges = len([i for i in words if i in Hedges])
+    hedges = [i for i in words if i in Hedges]
+    n_hedges = len(hedges)
     st.write("Number of 'Hedges': ", n_hedges, "Percentage: ", np.round(float(n_hedges/(nWords+epsilon))*100,3))
+    st.write("Hedges: ", marker_count(hedges))
+    st.dataframe(marker_count_data_frame(hedges),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-    n_emphatics = len([i for i in words if i in Emphatics])
+    emphatics = [i for i in words if i in Emphatics]
+    n_emphatics = len(emphatics)
     st.write("Number of 'Emphatics': ", n_emphatics, "Percentage: ", np.round(float(n_emphatics/(nWords+epsilon))*100,3))
+    st.write("Emphatics: ", marker_count(emphatics))
+    st.dataframe(marker_count_data_frame(emphatics),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-    n_frm_markers_stgs = len([i for i in words if i in FrameMarkersStages])
+    frm_markers_stage = [i for i in words if i in FrameMarkersStages]
+    n_frm_markers_stgs = len(frm_markers_stage)
     st.write("Number of 'Frame Markers': ", n_frm_markers_stgs, "Percentage: ", np.round(float(n_frm_markers_stgs/(nWords+epsilon))*100,3))
+    st.write("Frame Markers: ", marker_count(frm_markers_stage))
+    st.dataframe(marker_count_data_frame(frm_markers_stage),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
 
-    n_evidentials = len([i for i in words if i in Evidentials])
+    evidentials = [i for i in words if i in Evidentials]
+    n_evidentials = len(evidentials)
     st.write("Number of 'Evidentials': ", n_evidentials, "Percentage: ", np.round(float(n_evidentials/(nWords+epsilon))*100,3))        
+    st.write("Evidentials: ", marker_count(evidentials))
+    st.dataframe(marker_count_data_frame(evidentials),
+                 column_config={
+                     "Markers":st.column_config.Column(width='medium')
+                 }
+                 )
+
 elif selection == "Named entity recognition":
     st.write("Named entity recognition (NER) is an automated natural language processing technique that segments the words in a passage of text into various classes.  These classes could be names of people, organizations, cardinal numbers, seasons, etc.  NER assists a discourse analyst or linguist to visualize different classes of information and extract intelligence.")   
     
